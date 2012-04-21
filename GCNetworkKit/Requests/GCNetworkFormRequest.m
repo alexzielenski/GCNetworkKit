@@ -186,19 +186,18 @@
         NSData *readData;
         while ((readData = [readFileHandle readDataOfLength:1024 * 10]) != nil && [readData length] > 0)
             [weakReference._tmpFileWriterStream write:[readData bytes] maxLength:[readData length]];
-        
-		NSError *removeError = nil;
-		if (cachedShouldDelete) {
-			[[NSFileManager defaultManager] removeItemAtPath:path error:&removeError];
-			
-			if (removeError) {
-				NSLog(@"GCNetworkKit: Failed to remove file after processing. (%@:%@)", path, removeError);
-			}
-			
-		}
 		
         dispatch_sync(dispatch_get_main_queue(), ^{
             // Just so the operation doesn`t count as finished. 
+			if (cachedShouldDelete) {
+				NSError *removeError = nil;
+				[[NSFileManager defaultManager] removeItemAtPath:path error:&removeError];
+				
+				if (removeError) {
+					NSLog(@"GCNetworkKit: Failed to remove file after processing. (%@:%@)", path, removeError);
+				}
+				
+			}
         });
     }];
 }
