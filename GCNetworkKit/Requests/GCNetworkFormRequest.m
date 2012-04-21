@@ -57,6 +57,7 @@
 @synthesize _cancelled;
 @synthesize _htmlBoundary = __htmlBoundary;
 @synthesize uploadProgressHandler = _uploadProgressHandler;
+@synthesize shouldDeleteProcessedFiles = _shouldDeleteProcessedFiles;
 
 #pragma mark Init
 
@@ -170,7 +171,8 @@
         return;
     
     __GC_weak GCNetworkFormRequest *weakReference = self;
-    
+    BOOL cachedShouldDelete = self.shouldDeleteProcessedFiles; // We want to use the value that is set when this method is run rather than when the file is finished moving.
+	
     [self._writeQueue addOperationWithBlock:^{
         NSString *contentType = [[path pathExtension] mimeType];
 
@@ -185,6 +187,16 @@
         while ((readData = [readFileHandle readDataOfLength:1024 * 10]) != nil && [readData length] > 0)
             [weakReference._tmpFileWriterStream write:[readData bytes] maxLength:[readData length]];
         
+		NSError *removeError = nil;
+		if (cachedShouldDelete) {
+			[[NSFileManager defaultManager] removeItemAtPath:path error:&removeError];
+			
+			if (removeError) {
+				NSLog(@"GCNetworkKit: Failed to remove file after processing. (%@:%@)", path, removeError);
+			}
+			
+		}
+		
         dispatch_sync(dispatch_get_main_queue(), ^{
             // Just so the operation doesn`t count as finished. 
         });

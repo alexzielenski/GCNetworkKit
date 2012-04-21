@@ -26,8 +26,8 @@
 /* - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - */
 
 @interface GCNetworkFormRequest : GCNetworkRequest
-
-@property (nonatomic, copy, readwrite) GCNetworkRequestProgressBlock uploadProgressHandler;
+@property (nonatomic, assign, readwrite) BOOL shouldDeleteProcessedFiles;
+@property (nonatomic, copy, readwrite)   GCNetworkRequestProgressBlock uploadProgressHandler;
 
 // Add post data
 - (void)addPostString:(NSString *)string forKey:(NSString *)key;
