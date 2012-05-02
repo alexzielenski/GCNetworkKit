@@ -157,8 +157,8 @@
 }
 
 - (void)addFile:(NSString *)path forKey:(NSString *)key andName:(NSString *)name {    
-    NSString *extension = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
-    name = [NSString stringWithFormat:@"%@.%@", name, extension];
+//    NSString *extension = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
+//    name = [NSString stringWithFormat:@"%@.%@", name, extension];
     
     [self _addPartWithFilePath:path
                         forKey:key
