@@ -69,7 +69,7 @@
         NSString *bodyFileName = [(__bridge NSString *)uuidStr stringByAppendingPathExtension:extension];
         CFRelease(uuidStr);
         CFRelease(uuid);        
-
+		
         self._writeQueue = [NSOperationQueue new];
         [self._writeQueue setMaxConcurrentOperationCount:1];
         
@@ -81,7 +81,7 @@
     
     return self;
 }
-   
+
 #pragma mark Start
 
 - (void)cancel {
@@ -93,12 +93,12 @@
 
 - (void)start {
     self._cancelled = NO;
-
+	
     __GC_weak GCNetworkFormRequest *weakReference = self;
-
+	
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         [self._writeQueue waitUntilAllOperationsAreFinished];
-
+		
         if (weakReference._cancelled)
             return;
         
@@ -135,7 +135,7 @@
         return;
     
     __GC_weak GCNetworkFormRequest *weakReference = self;
-
+	
     [self._writeQueue addOperationWithBlock:^{
         [weakReference _appendBodyString:weakReference._formattedBoundary];
         [weakReference _appendBodyString:[NSString stringWithFormat:@"Content-Disposition: form-data; name=\"%@\"\r\n\r\n", key]];
@@ -156,9 +156,10 @@
           andName:name];
 }
 
-- (void)addFile:(NSString *)path forKey:(NSString *)key andName:(NSString *)name {    
-//    NSString *extension = [[[path lastPathComponent] componentsSeparatedByString:@"."] objectAtIndex:1];
-//    name = [NSString stringWithFormat:@"%@.%@", name, extension];
+- (void)addFile:(NSString *)path forKey:(NSString *)key andName:(NSString *)name {
+	NSArray *components = [[path lastPathComponent] componentsSeparatedByString:@"."];
+    NSString *extension = [components lastObject];
+    name = [NSString stringWithFormat:@"%@.%@", name, extension];
     
     [self _addPartWithFilePath:path
                         forKey:key
@@ -166,7 +167,7 @@
 }
 
 - (void)_addPartWithFilePath:(NSString *)path forKey:(NSString *)key andName:(NSString *)name {
-
+	
     if (!path || [path isEmpty] || !key)
         return;
     
@@ -175,7 +176,7 @@
 	
     [self._writeQueue addOperationWithBlock:^{
         NSString *contentType = [[path pathExtension] mimeType];
-
+		
         [weakReference _appendBodyString:weakReference._formattedBoundary];
         [weakReference _appendBodyString:@"Content-Disposition: form-data; "];
         [weakReference _appendBodyString:[NSString stringWithFormat:@"name=\"%@\"; ", key]];
@@ -231,7 +232,7 @@
         return;
     
     __GC_weak GCNetworkFormRequest *weakReference = self;
-
+	
     [self._writeQueue addOperationWithBlock:^{
         [weakReference _appendBodyString:weakReference._formattedBoundary];
         [weakReference _appendBodyString:@"Content-Disposition: form-data; "];
@@ -255,7 +256,7 @@
         } while (bytesWrittenSoFar != dataLength);
         
         dispatch_sync(dispatch_get_main_queue(), ^{
-           // Just so the operation doesn`t count as finished. 
+			// Just so the operation doesn`t count as finished. 
         });
     }];
 }
@@ -271,7 +272,7 @@
     unichar randomLetter2 = random() % 26 + 65;
     __htmlBoundary = [[NSString stringWithFormat:@"%c_%d_%c", randomLetter1, interval, randomLetter2] md5Hash];
     __htmlBoundary = [NSString stringWithFormat:@"htmlBoundaryStart%@htmlBoundaryEnd", __htmlBoundary];
-
+	
     return __htmlBoundary;
 }
 
@@ -314,7 +315,7 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
 
 - (void)connectionDidFinishLoading:(NSURLConnection *)connection {
     [[NSFileManager defaultManager] removeItemAtPath:self._tmpPath error:nil];
-
+	
     [super connectionDidFinishLoading:connection];
 }
 
@@ -324,14 +325,14 @@ totalBytesExpectedToWrite:(NSInteger)totalBytesExpectedToWrite {
     [self._tmpFileWriterStream close];
     self._tmpFileWriterStream = nil;
     [request setHTTPBodyStream:[NSInputStream inputStreamWithFileAtPath:self._tmpPath]];
-
+	
     NSDictionary *fileAttributes = [[NSFileManager defaultManager] attributesOfItemAtPath:self._tmpPath error:nil];
     NSInteger size = [[fileAttributes objectForKey:NSFileSize] intValue];
     
     [request setValue:[NSString stringWithFormat:@"multipart/form-data; boundary=%@", self._htmlBoundary] forHTTPHeaderField:@"Content-Type"];
     [request setValue:[NSString stringWithFormat:@"%d", size] forHTTPHeaderField:@"Content-Length"];
     [request setHTTPMethod:@"POST"];
-
+	
     return request;
 }
 
